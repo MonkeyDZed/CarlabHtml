@@ -2,58 +2,362 @@
 <html lang="fr"><head><meta charset="utf-8"><title>CARLAB – Atelier</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
-:root{--bg:#16161a;--sf:#1f1f25;--sf2:#2a2a32;--ln:#383841;--tx:#ece9e6;--mu:#a0a0aa;--rd:#d92d2d;--ok:#4fbf8a;--wa:#e0a43a}
+/* ===== DESIGN SYSTEM — CARLAB ATELIER ===== */
+/* Couleurs préservées — ne pas modifier */
+:root{
+  --bg:#16161a;
+  --sf:#1f1f25;
+  --sf2:#2a2a32;
+  --ln:#383841;
+  --tx:#ece9e6;
+  --mu:#a0a0aa;
+  --rd:#d92d2d;
+  --ok:#4fbf8a;
+  --wa:#e0a43a;
+
+  /* Espacement — échelle 4px */
+  --space-1:4px;
+  --space-2:8px;
+  --space-3:12px;
+  --space-4:16px;
+  --space-5:20px;
+  --space-6:24px;
+  --space-8:32px;
+
+  /* Radii */
+  --radius-sm:6px;
+  --radius-md:8px;
+  --radius-lg:10px;
+
+  /* Hauteurs composants (accessibilité tactile 44px) */
+  --height-sm:40px;
+  --height-md:44px;
+
+  /* Transitions */
+  --transition:0.2s ease;
+}
+
+/* Reset & base */
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.45 "Bahnschrift","Segoe UI",system-ui,sans-serif;display:flex;min-height:100vh}
-nav{width:215px;background:var(--sf);border-right:1px solid var(--ln);padding:24px 14px;flex-shrink:0;display:flex;flex-direction:column;gap:4px}
-.logo{font-size:28px;font-weight:700;margin:0 10px 26px;letter-spacing:.5px}
+html,body{margin:0;padding:0}
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--tx);
+  font:15px/1.6 "Bahnschrift","Segoe UI",system-ui,sans-serif;
+  display:flex;
+  min-height:100vh;
+  overflow-x:hidden;
+}
+
+/* Navigation latérale */
+nav{
+  width:200px;
+  background:var(--sf);
+  border-right:1px solid var(--ln);
+  padding:var(--space-5) var(--space-4);
+  flex-shrink:0;
+  display:flex;
+  flex-direction:column;
+  gap:var(--space-2);
+}
+.logo{
+  font-size:26px;
+  font-weight:700;
+  margin:0 0 var(--space-6);
+  letter-spacing:.5px;
+}
 .logo b{color:var(--rd)}
-nav button{background:none;border:0;color:var(--mu);text-align:left;padding:10px 12px;border-radius:6px;font:inherit;cursor:pointer;border-left:3px solid transparent}
+nav button{
+  background:none;
+  border:0;
+  color:var(--mu);
+  text-align:left;
+  padding:var(--space-3) var(--space-4);
+  border-radius:var(--radius-md);
+  font:inherit;
+  cursor:pointer;
+  border-left:3px solid transparent;
+  min-height:var(--height-md);
+  display:flex;
+  align-items:center;
+  gap:var(--space-2);
+  transition:background var(--transition),color var(--transition),border-color var(--transition);
+}
 nav button:hover{background:var(--sf2);color:var(--tx)}
-nav button.on{color:var(--tx);border-left-color:var(--rd);background:var(--sf2)}
+nav button.on{
+  color:var(--tx);
+  border-left-color:var(--rd);
+  background:var(--sf2);
+}
 nav .sp{flex:1}
-nav .sm{font-size:13px}
-main{flex:1;padding:28px 34px;max-width:1180px}
-h1{font-size:26px;margin:0 0 20px}
-h2{font-size:17px;margin:0 0 14px}
-.card{background:var(--sf);border:1px solid var(--ln);border-radius:8px;padding:18px;margin-bottom:22px}
-.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:14px}
+nav .sm{
+  font-size:13px;
+  padding:var(--space-2) var(--space-3);
+  min-height:var(--height-sm);
+}
+
+/* Contenu principal */
+main{
+  flex:1;
+  padding:var(--space-6) var(--space-8);
+  max-width:1400px;
+  overflow-y:auto;
+}
+h1{
+  font-size:24px;
+  margin:0 0 var(--space-6);
+  font-weight:700;
+}
+h2{
+  font-size:16px;
+  margin:0 0 var(--space-5);
+  font-weight:600;
+  color:var(--tx);
+}
+
+/* Cards */
+.card{
+  background:var(--sf);
+  border:1px solid var(--ln);
+  border-radius:var(--radius-md);
+  padding:var(--space-5);
+  margin-bottom:var(--space-6);
+}
+
+/* Grid de formulaires */
+.grid{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:var(--space-4);
+  margin-bottom:var(--space-5);
+}
 .w2{grid-column:span 2}
-label{display:flex;flex-direction:column;gap:5px;font-size:13px;color:var(--mu)}
-input,select{background:var(--bg);border:1px solid var(--ln);color:var(--tx);border-radius:6px;padding:9px 10px;font:inherit}
-input:focus,select:focus,button:focus-visible{outline:2px solid var(--rd);outline-offset:1px}
-button{font:inherit;background:var(--sf2);color:var(--tx);border:1px solid var(--ln);border-radius:6px;padding:8px 14px;cursor:pointer}
+
+/* Labels & inputs */
+label{
+  display:flex;
+  flex-direction:column;
+  gap:var(--space-2);
+  font-size:12.5px;
+  color:var(--mu);
+}
+input,select{
+  background:var(--bg);
+  border:1px solid var(--ln);
+  color:var(--tx);
+  border-radius:var(--radius-md);
+  padding:var(--space-3) var(--space-4);
+  font:inherit;
+  min-height:var(--height-md);
+  transition:border-color var(--transition);
+}
+input:focus,select:focus,button:focus-visible{
+  outline:2px solid var(--rd);
+  outline-offset:1px;
+}
+input[type="date"]{
+  padding:var(--space-2) var(--space-4);
+  min-height:var(--height-md);
+  line-height:1.2;
+}
+
+/* Boutons */
+button{
+  font:inherit;
+  background:var(--sf2);
+  color:var(--tx);
+  border:1px solid var(--ln);
+  border-radius:var(--radius-md);
+  padding:var(--space-3) var(--space-5);
+  cursor:pointer;
+  min-height:var(--height-md);
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:var(--space-2);
+  transition:background var(--transition),border-color var(--transition),filter var(--transition);
+}
 button:hover{border-color:var(--mu)}
-button.pri{background:var(--rd);border-color:var(--rd);color:#fff;font-weight:600}
+button.pri{
+  background:var(--rd);
+  border-color:var(--rd);
+  color:#fff;
+  font-weight:600;
+}
 button.pri:hover{filter:brightness(1.1)}
-button.lnk{background:none;border:0;color:var(--mu);padding:4px 6px}
-button.lnk:hover{color:var(--rd)}
-.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-.chips{display:flex;gap:8px;margin-bottom:12px}
+button.lnk{
+  background:none;
+  border:0;
+  color:var(--mu);
+  padding:var(--space-2) var(--space-4);
+  border-radius:var(--radius-md);
+  min-height:var(--height-sm);
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+}
+button.lnk:hover{color:var(--rd);background:var(--sf2)}
+
+/* Rows & chips */
+.row{
+  display:flex;
+  gap:var(--space-3);
+  align-items:center;
+  flex-wrap:wrap;
+}
+.chips{
+  display:flex;
+  gap:var(--space-2);
+  margin-bottom:var(--space-5);
+}
+.chips button{
+  padding:var(--space-2) var(--space-4);
+  min-height:var(--height-sm);
+  font-size:13px;
+}
 .chips button.on{border-color:var(--rd);color:var(--rd)}
-table{width:100%;border-collapse:collapse}
-th{font-weight:600;color:var(--mu);font-size:13px;text-align:left;padding:8px 10px;border-bottom:1px solid var(--ln)}
-td{padding:10px;border-bottom:1px solid var(--ln);vertical-align:middle}
+
+/* Tableaux */
+table{
+  width:100%;
+  border-collapse:collapse;
+  margin-top:var(--space-4);
+  font-size:14px;
+}
+th{
+  font-weight:600;
+  color:var(--mu);
+  font-size:12px;
+  text-align:left;
+  padding:var(--space-3) var(--space-4);
+  border-bottom:1px solid var(--ln);
+  text-transform:uppercase;
+  letter-spacing:0.05em;
+}
+td{
+  padding:var(--space-3) var(--space-4);
+  border-bottom:1px solid var(--ln);
+  vertical-align:middle;
+}
 td.n,th.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
-td small{color:var(--mu);display:block}
-td select{padding:5px 8px}
-.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px;margin-bottom:22px}
-.kpi{background:var(--sf);border:1px solid var(--ln);border-radius:8px;padding:16px}
-.kpi span{color:var(--mu);font-size:13px}
-.kpi b{display:block;font-size:22px;margin-top:4px;font-variant-numeric:tabular-nums}
+td small{color:var(--mu);display:block;margin-top:var(--space-1);font-size:12px}
+td select{
+  padding:var(--space-2) var(--space-3);
+  min-height:var(--height-sm);
+  font-size:13px;
+}
+
+/* KPIs */
+.kpis{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
+  gap:var(--space-4);
+  margin-bottom:var(--space-6);
+}
+.kpi{
+  background:var(--sf);
+  border:1px solid var(--ln);
+  border-radius:var(--radius-md);
+  padding:var(--space-4);
+}
+.kpi span{
+  color:var(--mu);
+  font-size:12px;
+}
+.kpi b{
+  display:block;
+  font-size:20px;
+  margin-top:var(--space-2);
+  font-variant-numeric:tabular-nums;
+}
 .kpi.big{border-color:var(--rd)}
-.ok{color:var(--ok)}.wa{color:var(--wa)}.mu{color:var(--mu)}
-.empty{color:var(--mu);padding:18px 4px}
-.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.75);display:none;align-items:center;justify-content:center;z-index:60;padding:20px}
+
+/* États */
+.ok{color:var(--ok)}
+.wa{color:var(--wa)}
+.mu{color:var(--mu)}
+.empty{
+  color:var(--mu);
+  padding:var(--space-6);
+  text-align:center;
+}
+
+/* Modale */
+.modal-overlay{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.8);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  z-index:100;
+  padding:var(--space-4);
+}
 .modal-overlay.open{display:flex}
-.modal{background:var(--sf);border:1px solid var(--ln);border-radius:8px;padding:20px;width:100%;max-width:440px;color:var(--tx);box-shadow:0 10px 30px rgba(0,0,0,0.5)}
-.modal h3{margin:0 0 14px;font-size:18px}
-.modal label{font-size:13px;color:var(--mu);margin-bottom:6px;display:block}
-.modal input{width:100%;padding:8px;margin-bottom:10px;box-sizing:border-box}
-.modal .row{margin-bottom:10px}
-.modal .reste{font-size:15px;font-weight:700;margin-top:8px;display:block}
-.modal .actions{display:flex;gap:10px;justify-content:flex-end;margin-top:16px}
-@media (max-width:900px){body{flex-direction:column}nav{width:auto;flex-direction:row;flex-wrap:wrap;padding:12px}.logo{margin:0 14px 0 0}.grid,.kpis{grid-template-columns:repeat(2,1fr)}main{padding:18px}}
+.modal{
+  background:var(--sf);
+  border:1px solid var(--ln);
+  border-radius:var(--radius-lg);
+  padding:var(--space-6);
+  width:100%;
+  max-width:520px;
+  color:var(--tx);
+  box-shadow:0 24px 48px rgba(0,0,0,0.5);
+}
+.modal h3{
+  margin:0 0 var(--space-5);
+  font-size:18px;
+  font-weight:600;
+}
+.modal label{
+  font-size:12.5px;
+  color:var(--mu);
+  margin-bottom:var(--space-2);
+  display:block;
+}
+.modal input{
+  width:100%;
+  padding:var(--space-3) var(--space-4);
+  margin-bottom:var(--space-4);
+  box-sizing:border-box;
+  min-height:var(--height-md);
+}
+.modal .row{
+  margin-bottom:var(--space-4);
+  gap:var(--space-3);
+  align-items:flex-end;
+}
+.modal .reste{
+  font-size:16px;
+  font-weight:700;
+  margin-top:var(--space-3);
+  display:block;
+}
+.modal .actions{
+  display:flex;
+  gap:var(--space-3);
+  justify-content:flex-end;
+  margin-top:var(--space-6);
+}
+.modal .actions button{min-height:var(--height-md)}
+
+/* Responsive — optimisé 1366×768 prioritaire */
+@media (max-width:900px){
+  body{flex-direction:column}
+  nav{
+    width:auto;
+    flex-direction:row;
+    flex-wrap:wrap;
+    padding:var(--space-3) var(--space-4);
+    gap:var(--space-2);
+  }
+  .logo{margin:0 var(--space-4) 0 0}
+  .grid,.kpis{grid-template-columns:repeat(2,1fr)}
+  main{padding:var(--space-4)}
+  td select{padding:var(--space-1) var(--space-3)}
+  .modal{max-width:90%;padding:var(--space-5)}
+}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style></head>
 <body>
@@ -192,11 +496,11 @@ function vCash(){
   <button class="${periodOr==="yesterday"?"on":""}" data-act="orf-yesterday">Hier</button>
   <button class="${periodOr==="month"?"on":""}" data-act="orf-month">Mois courant</button>
   <button class="${periodOr==="all"?"on":""}" data-act="orf-all">Période totale</button>
- </div><div class="row" style="gap:10px;align-items:flex-end">
+ </div><div class="row" style="gap:12px;align-items:center;flex-wrap:wrap">
   <label>Du<input id="dfCash" type="date" value="${dateFromOr}"></label>
   <label>Au<input id="dtCash" type="date" value="${dateToOr}"></label>
-  <button data-act="clearRangeCash" style="align-self:flex-end;padding:8px 14px">Effacer dates</button>
-  <button data-act="allPeriod" style="align-self:flex-end">Tout afficher</button>
+  <button data-act="clearRangeCash" class="lnk">Effacer dates</button>
+  <button data-act="allPeriod" class="lnk">Tout afficher</button>
  </div></div>
  <div class="kpis"><div class="kpi"><span>Encaissé (ordres payés)</span><b>${fmt(enc)}</b></div>
  <div class="kpi"><span>Commissions mécaniciens (après part apprentis)</span><b>${fmt(cm-mp)}</b></div>
@@ -392,7 +696,7 @@ function vHistorique(){
    <td class="n">${fmt(o.price)}</td>
    <td class="n">${fmt(comm(o))}</td>
    <td><select data-status="${o.id}">${ST.map(s=>`<option ${s===o.status?"selected":""}>${s}</option>`).join("")}</select>${payBadge}</td>
-   <td class="n"><button class="lnk" data-act="edit" data-id="${o.id}">Modifier</button><button class="lnk" data-act="del" data-id="${o.id}">Supprimer</button>${o.status!=="Payé"?`<button class="lnk pri" data-act="payOrder" data-id="${o.id}" style="padding:2px 6px;font-size:12px">Payer</button>`:""}</td></tr>`}).join("");
+   <td class="n"><button class="lnk" data-act="edit" data-id="${o.id}">Modifier</button><button class="lnk" data-act="del" data-id="${o.id}">Supprimer</button>${o.status!=="Payé"?`<button class="lnk" data-act="payOrder" data-id="${o.id}">Payer</button>`:""}</td></tr>`}).join("");
  return `<h1>Historique des ordres de réparation</h1>
  <div class="card"><div class="row">
   <label>Véhicule<input id="f-or-vehicle" type="text" placeholder="Filtrer par véhicule…"></label>
@@ -404,10 +708,10 @@ function vHistorique(){
   <button class="${periodOr==="yesterday"?"on":""}" data-act="orf-yesterday">Hier</button>
   <button class="${periodOr==="month"?"on":""}" data-act="orf-month">Mois courant</button>
   <button class="${periodOr==="all"?"on":""}" data-act="orf-all">Période totale</button>
- </div><div class="row" style="margin-top:10px;gap:10px;align-items:flex-end">
+ </div><div class="row" style="margin-top:10px;gap:12px;align-items:center;flex-wrap:wrap">
   <label>Du<input id="dfOr" type="date" value="${dateFromOr}"></label>
   <label>Au<input id="dtOr" type="date" value="${dateToOr}"></label>
-  <button data-act="clearRangeOr" style="align-self:flex-end;padding:8px 14px">Effacer dates</button>
+  <button data-act="clearRangeOr" class="lnk">Effacer dates</button>
  </div></div>
  ${list.length?`<table><thead><tr><th>Date</th><th>Véhicule</th><th>Client</th><th>Intervention</th><th>Mécanicien</th><th class="n">Prix</th><th class="n">Commission</th><th>Statut</th><th></th></tr></thead><tbody>${rows}</tbody></table>`:`<div class="empty">Aucun ordre trouvé avec ces filtres.</div>`}`;
 }
