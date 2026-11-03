@@ -225,7 +225,7 @@ document.addEventListener("click",ev=>{
   if(!vehicle&&!plate)return alert("Indique au moins le véhicule ou l’immatriculation.");
   const mechId=$("#f-mech").value,old=S.orders.find(o=>o.id===editId);
   const rate=mechId?(old&&old.mechId===mechId?old.rate:mech(mechId).rate):0;
-  const o={id:editId||uid(),date:$("#f-date").value||today(),vehicle,plate,client:val("#f-client"),type:val("#f-type"),price:editId?(old.price||0):0,mechId,rate:editId?(old.rate||0):0,status:editId?(old.status||"En cours"):"En cours",amountPaid:old?old.amountPaid:0};
+  const o={id:editId||uid(),date:$("#f-date").value||today(),vehicle,plate,client:val("#f-client"),type:val("#f-type"),price:editId?(old.price||0):0,mechId,rate:editId?(old.rate||0):(mechId?mech(mechId).rate:0),status:editId?(old.status||"En cours"):"En cours",amountPaid:old?old.amountPaid:0};
   if(old)Object.assign(old,o);else S.orders.push(o);
   editId=null;save();render();
  }else if(a==="cancelEdit"){editId=null;render()}
@@ -338,18 +338,18 @@ function updateRestePreview(){
 }
 function confirmPartial(){
  const amt=parseFloat($("#pm-amount").value)||0;
- if(amt<=0){alert("Indique un montant supérieur à 0.");return;}
  const o=S.orders.find(x=>x.id===pendingPartialId);
  if(!o){closePartialModal();return;}
  if((o.price||0)===0){
   const totalPrice=parseFloat($("#pm-total-price").value)||0;
-  if(totalPrice<=0){alert("Indique le prix total de l'intervention.");return;}
   o.price=totalPrice;
  }
  const newPaid=(o.amountPaid||0)+amt;
  o.amountPaid=newPaid;
- if(newPaid>=o.price){o.status="Payé"; o.amountPaid=o.price;}
- else{o.status="Partiellement payé";}
+ if(amt>0){
+  if(newPaid>=o.price){o.status="Payé"; o.amountPaid=o.price;}
+  else{o.status="Partiellement payé";}
+ }
  closePartialModal();save();render();
 }
 function cancelPartial(){
