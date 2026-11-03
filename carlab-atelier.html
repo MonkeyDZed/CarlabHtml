@@ -1,0 +1,415 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8"><title>CARLAB – Atelier</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+:root{--bg:#16161a;--sf:#1f1f25;--sf2:#2a2a32;--ln:#383841;--tx:#ece9e6;--mu:#a0a0aa;--rd:#d92d2d;--ok:#4fbf8a;--wa:#e0a43a}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.45 "Bahnschrift","Segoe UI",system-ui,sans-serif;display:flex;min-height:100vh}
+nav{width:215px;background:var(--sf);border-right:1px solid var(--ln);padding:24px 14px;flex-shrink:0;display:flex;flex-direction:column;gap:4px}
+.logo{font-size:28px;font-weight:700;margin:0 10px 26px;letter-spacing:.5px}
+.logo b{color:var(--rd)}
+nav button{background:none;border:0;color:var(--mu);text-align:left;padding:10px 12px;border-radius:6px;font:inherit;cursor:pointer;border-left:3px solid transparent}
+nav button:hover{background:var(--sf2);color:var(--tx)}
+nav button.on{color:var(--tx);border-left-color:var(--rd);background:var(--sf2)}
+nav .sp{flex:1}
+nav .sm{font-size:13px}
+main{flex:1;padding:28px 34px;max-width:1180px}
+h1{font-size:26px;margin:0 0 20px}
+h2{font-size:17px;margin:0 0 14px}
+.card{background:var(--sf);border:1px solid var(--ln);border-radius:8px;padding:18px;margin-bottom:22px}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:14px}
+.w2{grid-column:span 2}
+label{display:flex;flex-direction:column;gap:5px;font-size:13px;color:var(--mu)}
+input,select{background:var(--bg);border:1px solid var(--ln);color:var(--tx);border-radius:6px;padding:9px 10px;font:inherit}
+input:focus,select:focus,button:focus-visible{outline:2px solid var(--rd);outline-offset:1px}
+button{font:inherit;background:var(--sf2);color:var(--tx);border:1px solid var(--ln);border-radius:6px;padding:8px 14px;cursor:pointer}
+button:hover{border-color:var(--mu)}
+button.pri{background:var(--rd);border-color:var(--rd);color:#fff;font-weight:600}
+button.pri:hover{filter:brightness(1.1)}
+button.lnk{background:none;border:0;color:var(--mu);padding:4px 6px}
+button.lnk:hover{color:var(--rd)}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.chips{display:flex;gap:8px;margin-bottom:12px}
+.chips button.on{border-color:var(--rd);color:var(--rd)}
+table{width:100%;border-collapse:collapse}
+th{font-weight:600;color:var(--mu);font-size:13px;text-align:left;padding:8px 10px;border-bottom:1px solid var(--ln)}
+td{padding:10px;border-bottom:1px solid var(--ln);vertical-align:middle}
+td.n,th.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+td small{color:var(--mu);display:block}
+td select{padding:5px 8px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px;margin-bottom:22px}
+.kpi{background:var(--sf);border:1px solid var(--ln);border-radius:8px;padding:16px}
+.kpi span{color:var(--mu);font-size:13px}
+.kpi b{display:block;font-size:22px;margin-top:4px;font-variant-numeric:tabular-nums}
+.kpi.big{border-color:var(--rd)}
+.ok{color:var(--ok)}.wa{color:var(--wa)}.mu{color:var(--mu)}
+.empty{color:var(--mu);padding:18px 4px}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.75);display:none;align-items:center;justify-content:center;z-index:60;padding:20px}
+.modal-overlay.open{display:flex}
+.modal{background:var(--sf);border:1px solid var(--ln);border-radius:8px;padding:20px;width:100%;max-width:440px;color:var(--tx);box-shadow:0 10px 30px rgba(0,0,0,0.5)}
+.modal h3{margin:0 0 14px;font-size:18px}
+.modal label{font-size:13px;color:var(--mu);margin-bottom:6px;display:block}
+.modal input{width:100%;padding:8px;margin-bottom:10px;box-sizing:border-box}
+.modal .row{margin-bottom:10px}
+.modal .reste{font-size:15px;font-weight:700;margin-top:8px;display:block}
+.modal .actions{display:flex;gap:10px;justify-content:flex-end;margin-top:16px}
+@media (max-width:900px){body{flex-direction:column}nav{width:auto;flex-direction:row;flex-wrap:wrap;padding:12px}.logo{margin:0 14px 0 0}.grid,.kpis{grid-template-columns:repeat(2,1fr)}main{padding:18px}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style></head>
+<body>
+<nav>
+ <div class="logo">CAR<b>LAB</b></div>
+ <button data-tab="orders">Ordres de réparation</button>
+ <button data-tab="historique">Historique</button>
+ <button data-tab="mech">Équipe</button>
+ <button data-tab="cash">Trésorerie</button>
+ <div class="sp"></div>
+ <button class="sm" data-act="export">Exporter les données</button>
+ <button class="sm" data-act="import">Importer une sauvegarde</button>
+ <button class="sm" data-act="clearDb" style="color:var(--rd)">Vider la BDD</button>
+ <input id="imp" type="file" accept=".json" hidden>
+</nav>
+<main id="main"></main>
+
+<div id="pm-overlay" class="modal-overlay">
+ <div class="modal">
+  <h3>Paiement / Prix de l'intervention</h3>
+  <div class="row"><label>Véhicule : <span id="pm-vehicle"></span></label></div>
+  <div class="row" id="pm-total-price-row" style="display:none"><label>Prix total de l'intervention (DA) <input id="pm-total-price" type="number" min="0" step="any"></label></div>
+  <div class="row"><label>Prix total : <span id="pm-price"></span> DA</label></div>
+  <div class="row"><label>Déjà payé : <span id="pm-already"></span> DA</label></div>
+  <div class="row"><label>Montant à saisir (DA) <input id="pm-amount" type="number" min="0" step="any"></label></div>
+  <div class="row"><label>Date <input id="pm-date" type="date"></label></div>
+  <div class="row"><label>Note <input id="pm-note" type="text" placeholder="Acompte…"></label></div>
+  <span id="pm-reste" class="reste"></span>
+  <div class="actions">
+   <button data-act="pm-cancel" class="lnk">Annuler</button>
+   <button data-act="pm-confirm" class="pri">Confirmer</button>
+  </div>
+ </div>
+</div>
+
+<script>
+const KEY="carlab_v1",ST=["En cours","Terminé","Payé","Partiellement payé"],SPLIT=0.5,DATA_VERSION="2";
+const SEED_DATA={"mechanics":[{"id":"hu66go9","name":"Karim","rate":35},{"id":"0952paf","name":"Mehdi","rate":20}],"orders":[{"id":"wy6evf9","date":"2026-08-04","plate":"39288 219 22","vehicle":"Fiat Doblo","client":"Yacine","type":"Diagnostic ThinkDiag + effacement défauts","price":5000,"mechId":"","rate":0,"status":"Payé","amountPaid":5000},{"id":"xx31fz9","date":"2026-08-05","plate":"16263 221 22","vehicle":"Toyota Hilux","client":"Khaled S.","type":"Rotules et biellettes de direction","price":17000,"mechId":"hu66go9","rate":30,"status":"Payé","amountPaid":17000},{"id":"467boid","date":"2026-08-06","plate":"69579 124 22","vehicle":"Skoda Octavia","client":"Abdelkader Ben Amar","type":"Diagnostic ThinkDiag + effacement défauts","price":4000,"mechId":"","rate":0,"status":"Payé","amountPaid":4000},{"id":"375xmq5","date":"2026-08-09","plate":"68012 218 22","vehicle":"Toyota Hilux","client":"M. Cherif","type":"Plaquettes AV","price":9500,"mechId":"hu66go9","rate":30,"status":"Payé","amountPaid":9500},{"id":"48q9zt9","date":"2026-08-09","plate":"85785 217 22","vehicle":"Peugeot 301","client":"Abdelkader Ben Amar","type":"Courroie d’accessoires","price":8000,"mechId":"hu66go9","rate":30,"status":"Payé","amountPaid":8000},{"id":"26q2l14","date":"2026-08-10","plate":"86006 220 22","vehicle":"Clio 4 1.5 dCi","client":"Karima","type":"Vidange 5W30 <Total> + filtre à huile","price":4500,"mechId":"hu66go9","rate":30,"status":"Payé","amountPaid":4500},{"id":"fa28fmp","date":"2026-08-11","plate":"82405 122 22","vehicle":"Clio 4 1.5 dCi","client":"Sarl Transport El-Wiam","type":"Vidange + filtres","price":5500,"mechId":"hu66go9","rate":30,"status":"Payé","amountPaid":5500},{"id":"i8o4i6s","date":"2026-08-13","plate":"55759 109 22","vehicle":"Clio 4 1.5 dCi","client":"Lotfi","type":"Courroie d’accessoires","price":8500,"mechId":"hu66go9","rate":30,"status":"Payé","amountPaid":8500},{"id":"53kj7n1","date":"2026-08-15","plate":"45095 224 22","vehicle":"Seat Ibiza","client":"Hadj Boumediene","type":"Vidange 5W30 <Total> + filtre à huile","price":6000,"mechId":"hu66go9","rate":30,"status":"Payé","amountPaid":6000},{"id":"yagyedw","date":"2026-08-15","plate":"47321 105 22","vehicle":"Renault Kangoo","client":"Tahar","type":"Plaquettes + disques AR","price":17000,"mechId":"hu66go9","rate":30,"status":"Payé","amountPaid":17000},{"id":"c8d2m4b","date":"2026-08-16","plate":"85626 121 22","vehicle":"Symbol 1.5 dCi","client":"Yacine","type":"Plaquettes AV","price":7000,"mechId":"hu66go9","rate":30,"status":"Payé","amountPaid":7000},{"id":"fytlwlq","date":"2026-08-17","plate":"66221 214 22","vehicle":"Toyota Hilux","client":"Imène","type":"Amortisseurs AV (la paire)","price":18500,"mechId":"hu66go9","rate":30,"status":"Payé","amountPaid":18500},{"id":"rgnoaf3","date":"2026-08-18","plate":"44311 222 22","vehicle":"Renault Kangoo","client":"Walid K.","type":"Joint de culasse","price":93500,"mechId":"hu66go9","rate":30,"status":"Payé","amountPaid":93500},{"id":"nhr9nsr","date":"2026-08-20","plate":"73841 108 22","vehicle":"Renault Kangoo","client":"Sarl Transport El-Wiam","type":"Joint de culasse","price":63500,"mechId":"hu66go9","rate":30,"status":"Payé","amountPaid":63500},{"id":"g6uresu","date":"2026-08-24","plate":"35191 207 22","vehicle":"Symbol 1.5 dCi","client":"Amine B.","type":"Remplacement durites + liquide de refroidissement","price":9000,"mechId":"hu66go9","rate":30,"status":"Payé","amountPaid":9000},{"id":"dgpbthg","date":"2026-08-25","plate":"74554 215 22","vehicle":"Renault Kangoo","client":"Imène","type":"Vidange + filtres","price":5500,"mechId":"hu66go9","rate":30,"status":"Payé","amountPaid":5500},{"id":"un31hx6","date":"2026-08-25","plate":"33974 214 22","vehicle":"Renault Kangoo","client":"Karima","type":"Amortisseurs AV (la paire)","price":17000,"mechId":"hu66go9","rate":30,"status":"Payé","amountPaid":17000},{"id":"sht0ub8","date":"2026-08-26","plate":"26879 108 22","vehicle":"Hyundai i10","client":"Walid K.","type":"Embrayage complet","price":50500,"mechId":"hu66go9","rate":30,"status":"Payé","amountPaid":50500},{"id":"tb1iw0y","date":"2026-08-26","plate":"32366 226 22","vehicle":"Kia Picanto","client":"Hadj Boumediene","type":"Embrayage complet","price":54500,"mechId":"hu66go9","rate":30,"status":"Payé","amountPaid":54500},{"id":"9c6qv7u","date":"2026-08-29","plate":"87228 125 22","vehicle":"Golf 7 1.6 TDI","client":"Hadj Boumediene","type":"Plaquettes AV","price":8500,"mechId":"hu66go9","rate":30,"status":"Terminé","amountPaid":0},{"id":"zqjobbr","date":"2026-08-29","plate":"63762 213 22","vehicle":"Fiat Doblo","client":"Djamel M.","type":"Joint de culasse","price":65000,"mechId":"hu66go9","rate":30,"status":"Payé","amountPaid":65000},{"id":"zxo9rvm","date":"2026-08-30","plate":"48069 225 22","vehicle":"Hyundai i10","client":"Imène","type":"Diagnostic ThinkDiag + effacement défauts","price":4000,"mechId":"","rate":0,"status":"Payé","amountPaid":4000},{"id":"gb8ntcz","date":"2026-08-31","plate":"71645 121 22","vehicle":"Kia Picanto","client":"Fatima Z.","type":"Plaquettes AV","price":6500,"mechId":"hu66go9","rate":30,"status":"Payé","amountPaid":6500},{"id":"k0j5aw7","date":"2026-08-31","plate":"54520 125 22","vehicle":"Skoda Octavia","client":"Walid K.","type":"Plaquettes + disques AR","price":13000,"mechId":"hu66go9","rate":30,"status":"Payé","amountPaid":13000},{"id":"mkss8sw","date":"2026-09-01","plate":"51936 125 22","vehicle":"Symbol 1.5 dCi","client":"Amine B.","type":"Vidange + filtres","price":6000,"mechId":"hu66go9","rate":30,"status":"Payé","amountPaid":6000},{"id":"jpigu5g","date":"2026-09-02","plate":"96240 117 22","vehicle":"Chevrolet Spark","client":"Sarl Transport El-Wiam","type":"Joint de culasse","price":81500,"mechId":"hu66go9","rate":30,"status":"Payé","amountPaid":81500},{"id":"k7blu8j","date":"2026-09-02","plate":"04724 121 22","vehicle":"Symbol 1.5 dCi","client":"Amine B.","type":"Joint de culasse","price":89500,"mechId":"hu66go9","rate":30,"status":"Payé","amountPaid":89500},{"id":"h97pw3w","date":"2026-09-03","plate":"10048 120 22","vehicle":"Clio 4 1.5 dCi","client":"Samir","type":"Diagnostic ThinkDiag + effacement défauts","price":3500,"mechId":"","rate":0,"status":"Payé","amountPaid":3500},{"id":"5zulm3o","date":"2026-09-06","plate":"91329 216 22","vehicle":"Chevrolet Spark","client":"Abdelkader Ben Amar","type":"Embrayage complet","price":56000,"mechId":"hu66go9","rate":30,"status":"Payé","amountPaid":56000},{"id":"i1rvhur","date":"2026-09-08","plate":"59254 209 22","vehicle":"Chevrolet Spark","client":"M. Cherif","type":"Rotules et biellettes de direction","price":14500,"mechId":"hu66go9","rate":30,"status":"Payé","amountPaid":14500},{"id":"044vaco","date":"2026-09-09","plate":"16838 215 22","vehicle":"Renault Kangoo","client":"Amine B.","type":"Remplacement durites + liquide de refroidissement","price":11500,"mechId":"hu66go9","rate":30,"status":"Payé","amountPaid":11500},{"id":"87n1wvd","date":"2026-09-09","plate":"53397 105 22","vehicle":"Dacia Duster","client":"Sarl Transport El-Wiam","type":"Diagnostic ThinkDiag + effacement défauts","price":4000,"mechId":"","rate":0,"status":"Payé","amountPaid":4000},{"id":"rs3zzb9","date":"2026-09-09","plate":"44144 215 22","vehicle":"Skoda Octavia","client":"Fatima Z.","type":"Vidange 5W30 <Total> + filtre à huile","price":6000,"mechId":"hu66go9","rate":30,"status":"Terminé","amountPaid":0},{"id":"f9m8agj","date":"2026-09-10","plate":"29757 211 22","vehicle":"Hyundai i10","client":"Khaled S.","type":"Embrayage complet","price":52000,"mechId":"hu66go9","rate":30,"status":"Payé","amountPaid":52000},{"id":"9igbr0c","date":"2026-09-13","plate":"73120 120 22","vehicle":"Symbol 1.5 dCi","client":"Djamel M.","type":"Nettoyage vanne EGR","price":10500,"mechId":"hu66go9","rate":30,"status":"Payé","amountPaid":10500},{"id":"qc5ib4x","date":"2026-09-14","plate":"99954 211 22","vehicle":"Dacia Logan MCV","client":"Karima","type":"Embrayage complet","price":42000,"mechId":"hu66go9","rate":30,"status":"Payé","amountPaid":42000},{"id":"0e68t4f","date":"2026-09-15","plate":"67798 220 22","vehicle":"Chevrolet Spark","client":"Djamel M.","type":"Vidange + filtres","price":5500,"mechId":"hu66go9","rate":30,"status":"Payé","amountPaid":5500},{"id":"77ygnb3","date":"2026-09-17","plate":"28481 221 22","vehicle":"Peugeot 208 1.2","client":"Tahar","type":"Kit distribution + pompe à eau","price":30500,"mechId":"hu66go9","rate":30,"status":"Payé","amountPaid":30500},{"id":"5i9uxz8","date":"2026-09-19","plate":"96178 109 22","vehicle":"Seat Ibiza","client":"Khaled S.","type":"Rotules et biellettes de direction","price":14000,"mechId":"hu66go9","rate":30,"status":"Terminé","amountPaid":0},{"id":"dcrtlir","date":"2026-09-19","plate":"91826 209 22","vehicle":"Fiat Doblo","client":"Imène","type":"Plaquettes AV","price":7000,"mechId":"hu66go9","rate":30,"status":"Payé","amountPaid":7000},{"id":"4adgwqv","date":"2026-09-20","plate":"04681 121 22","vehicle":"Peugeot 301","client":"Nacer","type":"Vidange + filtres","price":6000,"mechId":"hu66go9","rate":30,"status":"Payé","amountPaid":6000},{"id":"58bto6x","date":"2026-09-20","plate":"72138 119 22","vehicle":"Dacia Duster","client":"Abdelkader Ben Amar","type":"Amortisseurs AV (la paire)","price":18000,"mechId":"hu66go9","rate":30,"status":"Payé","amountPaid":18000},{"id":"po5nxk8","date":"2026-09-21","plate":"56308 219 22","vehicle":"Chevrolet Spark","client":"Karima","type":"Plaquettes AV","price":9500,"mechId":"hu66go9","rate":30,"status":"Terminé","amountPaid":0},{"id":"4fnmhfw","date":"2026-09-22","plate":"90000 108 22","vehicle":"Skoda Octavia","client":"Walid K.","type":"Joint de culasse","price":67000,"mechId":"hu66go9","rate":30,"status":"Payé","amountPaid":67000},{"id":"1b9jrsx","date":"2026-09-23","plate":"02248 221 22","vehicle":"Kia Picanto","client":"Imène","type":"Diagnostic ThinkDiag + effacement défauts","price":5000,"mechId":"","rate":0,"status":"Payé","amountPaid":5000},{"id":"gj9ow3y","date":"2026-09-23","plate":"83974 126 22","vehicle":"Seat Ibiza","client":"M. Cherif","type":"Plaquettes AV","price":7500,"mechId":"hu66go9","rate":30,"status":"Payé","amountPaid":7500},{"id":"877grsc","date":"2026-09-24","plate":"78359 107 22","vehicle":"Clio 4 1.5 dCi","client":"Tahar","type":"Embrayage complet","price":58000,"mechId":"hu66go9","rate":30,"status":"Payé","amountPaid":58000},{"id":"348bjui","date":"2026-09-26","plate":"14782 207 22","vehicle":"Golf 7 1.6 TDI","client":"Walid K.","type":"Nettoyage vanne EGR","price":11500,"mechId":"hu66go9","rate":30,"status":"Payé","amountPaid":11500},{"id":"3isp7ur","date":"2026-09-27","plate":"57585 116 22","vehicle":"Peugeot 301","client":"Khaled S.","type":"Joint de culasse","price":90500,"mechId":"hu66go9","rate":30,"status":"Payé","amountPaid":90500},{"id":"5pl2mh4","date":"2026-09-27","plate":"51019 221 22","vehicle":"Seat Ibiza","client":"Amine B.","type":"Vidange + filtres","price":5000,"mechId":"hu66go9","rate":30,"status":"Payé","amountPaid":5000},{"id":"7hvjt4p","date":"2026-09-27","plate":"94973 212 22","vehicle":"Hyundai i10","client":"Réda","type":"Vidange 5W30 <Total> + filtre à huile","price":4500,"mechId":"hu66go9","rate":30,"status":"Payé","amountPaid":4500},{"id":"e9k3zhg","date":"2026-09-28","plate":"55514 205 22","vehicle":"Peugeot 301","client":"Hadj Boumediene","type":"Plaquettes + disques AR","price":14000,"mechId":"hu66go9","rate":30,"status":"Payé","amountPaid":14000},{"id":"fqkcn9h","date":"2026-09-29","plate":"59641 116 22","vehicle":"Dacia Duster","client":"Imène","type":"Embrayage complet","price":56000,"mechId":"hu66go9","rate":30,"status":"Payé","amountPaid":56000},{"id":"m4dsfke","date":"2026-09-29","plate":"27817 114 22","vehicle":"Dacia Logan MCV","client":"Khaled S.","type":"Diagnostic ThinkDiag + effacement défauts","price":4500,"mechId":"","rate":0,"status":"Payé","amountPaid":4500},{"id":"8k978p5","date":"2026-09-30","plate":"07976 212 22","vehicle":"Chevrolet Spark","client":"M. Cherif","type":"Diagnostic ThinkDiag + effacement défauts","price":4000,"mechId":"","rate":0,"status":"Payé","amountPaid":4000},{"id":"lkpk9m6","date":"2026-10-03","plate":"45183 213 22","vehicle":"Peugeot 301","client":"Walid K.","type":"Courroie d’accessoires","price":9500,"mechId":"hu66go9","rate":35,"status":"Payé","amountPaid":9500},{"id":"7p4jul5","date":"2026-10-05","plate":"16121 105 22","vehicle":"Fiat Doblo","client":"Réda","type":"Diagnostic ThinkDiag + effacement défauts","price":3000,"mechId":"","rate":0,"status":"Payé","amountPaid":3000},{"id":"v6wfbqp","date":"2026-10-05","plate":"50445 114 22","vehicle":"Clio 4 1.5 dCi","client":"Khaled S.","type":"Remplacement durites + liquide de refroidissement","price":10500,"mechId":"hu66go9","rate":35,"status":"Payé","amountPaid":10500},{"id":"abvl3gp","date":"2026-10-06","plate":"62795 124 22","vehicle":"Renault Kangoo","client":"Tahar","type":"Joint de culasse","price":92500,"mechId":"hu66go9","rate":35,"status":"Payé","amountPaid":92500},{"id":"b2sjya2","date":"2026-10-10","plate":"16923 112 22","vehicle":"Seat Ibiza","client":"Djamel M.","type":"Kit distribution + pompe à eau","price":37000,"mechId":"hu66go9","rate":35,"status":"Payé","amountPaid":37000},{"id":"tq204su","date":"2026-10-11","plate":"23040 124 22","vehicle":"Chevrolet Spark","client":"M. Cherif","type":"Courroie d’accessoires","price":7000,"mechId":"hu66go9","rate":35,"status":"Payé","amountPaid":7000},{"id":"oukgoyi","date":"2026-10-12","plate":"44940 211 22","vehicle":"Seat Ibiza","client":"Khaled S.","type":"Amortisseurs AV (la paire)","price":23500,"mechId":"hu66go9","rate":35,"status":"Payé","amountPaid":23500},{"id":"w2pl6tc","date":"2026-10-13","plate":"82420 114 22","vehicle":"Skoda Octavia","client":"Walid K.","type":"Kit distribution + pompe à eau","price":45000,"mechId":"hu66go9","rate":35,"status":"Payé","amountPaid":45000},{"id":"mr37jnu","date":"2026-10-14","plate":"21870 205 22","vehicle":"Clio 4 1.5 dCi","client":"Fatima Z.","type":"Vidange + filtres","price":4500,"mechId":"0952paf","rate":20,"status":"Payé","amountPaid":4500},{"id":"6wwy7oa","date":"2026-10-15","plate":"69902 217 22","vehicle":"Kia Picanto","client":"Khaled S.","type":"Remplacement durites + liquide de refroidissement","price":12000,"mechId":"hu66go9","rate":35,"status":"Payé","amountPaid":12000},{"id":"dtc6v9t","date":"2026-10-15","plate":"55266 125 22","vehicle":"Chevrolet Spark","client":"M. Cherif","type":"Remplacement durites + liquide de refroidissement","price":12000,"mechId":"hu66go9","rate":35,"status":"Terminé","amountPaid":0},{"id":"p9ywbgp","date":"2026-10-15","plate":"23914 224 22","vehicle":"Peugeot 208 1.2","client":"Réda","type":"Diagnostic ThinkDiag + effacement défauts","price":4000,"mechId":"","rate":0,"status":"Payé","amountPaid":4000},{"id":"8fghnzh","date":"2026-10-17","plate":"79838 225 22","vehicle":"Toyota Hilux","client":"Tahar","type":"Vidange + filtres","price":6500,"mechId":"hu66go9","rate":35,"status":"Payé","amountPaid":6500},{"id":"gevj30g","date":"2026-10-18","plate":"14825 122 22","vehicle":"Renault Kangoo","client":"Boualem","type":"Vidange + filtres","price":4500,"mechId":"hu66go9","rate":35,"status":"Payé","amountPaid":4500},{"id":"m3yexze","date":"2026-10-19","plate":"02315 223 22","vehicle":"Symbol 1.5 dCi","client":"Ets Bensaïd & Frères","type":"Plaquettes AV","price":7000,"mechId":"0952paf","rate":20,"status":"Payé","amountPaid":7000},{"id":"g91ifb3","date":"2026-10-21","plate":"09220 220 22","vehicle":"Kia Picanto","client":"Mohamed Larbi","type":"Diagnostic ThinkDiag + effacement défauts","price":4000,"mechId":"","rate":0,"status":"Payé","amountPaid":4000},{"id":"r9omvqf","date":"2026-10-24","plate":"40798 122 22","vehicle":"Hyundai i10","client":"Ets Bensaïd & Frères","type":"Diagnostic ThinkDiag + effacement défauts","price":5500,"mechId":"0952paf","rate":20,"status":"Payé","amountPaid":5500},{"id":"7p1gwka","date":"2026-10-26","plate":"19565 213 22","vehicle":"Chevrolet Spark","client":"Abdelkader Ben Amar","type":"Joint de culasse","price":87500,"mechId":"hu66go9","rate":35,"status":"Payé","amountPaid":87500},{"id":"fqu1to7","date":"2026-10-27","plate":"70149 213 22","vehicle":"Symbol 1.5 dCi","client":"Mohamed Larbi","type":"Amortisseurs AV (la paire)","price":24000,"mechId":"hu66go9","rate":35,"status":"Payé","amountPaid":24000},{"id":"n2kw7tq","date":"2026-10-28","plate":"15460 105 22","vehicle":"Dacia Logan MCV","client":"Nacer","type":"Kit distribution + pompe à eau","price":40000,"mechId":"hu66go9","rate":35,"status":"Terminé","amountPaid":0},{"id":"hvz13yg","date":"2026-10-29","plate":"57437 223 22","vehicle":"Hyundai i10","client":"Djamel M.","type":"Diagnostic ThinkDiag + effacement défauts","price":4000,"mechId":"","rate":0,"status":"Terminé","amountPaid":0},{"id":"o39wikj","date":"2026-10-29","plate":"26452 226 22","vehicle":"Dacia Logan MCV","client":"Fatima Z.","type":"Courroie d’accessoires","price":9000,"mechId":"0952paf","rate":20,"status":"Terminé","amountPaid":0},{"id":"q4ax03c","date":"2026-10-31","plate":"04032 222 22","vehicle":"Seat Ibiza","client":"M. Cherif","type":"Embrayage complet","price":55000,"mechId":"hu66go9","rate":35,"status":"Payé","amountPaid":55000},{"id":"ytqannd","date":"2026-10-31","plate":"30999 106 22","vehicle":"Clio 4 1.5 dCi","client":"Karima","type":"Kit distribution + pompe à eau","price":46500,"mechId":"hu66go9","rate":35,"status":"En cours","amountPaid":0},{"id":"87dsig0","date":"2026-11-01","plate":"16276 108 22","vehicle":"Peugeot 208 1.2","client":"Ets Bensaïd & Frères","type":"Nettoyage vanne EGR","price":15000,"mechId":"hu66go9","rate":35,"status":"En cours","amountPaid":0},{"id":"9bs0x92","date":"2026-11-02","plate":"07693 214 22","vehicle":"Peugeot 208 1.2","client":"Yacine","type":"Courroie d’accessoires","price":8500,"mechId":"hu66go9","rate":35,"status":"En cours","amountPaid":0},{"id":"yq4xmml","date":"2026-11-02","plate":"48137 207 22","vehicle":"Peugeot 208 1.2","client":"Khaled S.","type":"Vidange + filtres","price":5000,"mechId":"0952paf","rate":20,"status":"En cours","amountPaid":0},{"id":"zde3042","date":"2026-11-02","plate":"84356 105 22","vehicle":"Renault Kangoo","client":"Samir","type":"Nettoyage vanne EGR","price":13500,"mechId":"hu66go9","rate":35,"status":"Payé","amountPaid":13500}],"payouts":[{"id":"56m4g5z","mechId":"","apprId":"hsg2a5u","amount":3000,"date":"2026-08-06","note":"Semaine"},{"id":"ld5skvy","mechId":"hu66go9","apprId":"","amount":2500,"date":"2026-08-06","note":"Fin de semaine"},{"id":"eesxs0c","mechId":"","apprId":"hsg2a5u","amount":6000,"date":"2026-08-13","note":"Semaine"},{"id":"uj1c1qu","mechId":"hu66go9","apprId":"","amount":6500,"date":"2026-08-13","note":"Acompte"},{"id":"1x8svcb","mechId":"hu66go9","apprId":"","amount":47500,"date":"2026-08-20","note":"Fin de semaine"},{"id":"r7uhs8h","mechId":"","apprId":"hsg2a5u","amount":6000,"date":"2026-08-20","note":"Semaine"},{"id":"b9m36ev","mechId":"","apprId":"hsg2a5u","amount":6000,"date":"2026-08-27","note":"Semaine"},{"id":"hnpex1c","mechId":"hu66go9","apprId":"","amount":41500,"date":"2026-08-27","note":"Fin de semaine"},{"id":"0eaedhv","mechId":"hu66go9","apprId":"","amount":66500,"date":"2026-09-03","note":"Acompte"},{"id":"sqtyexg","mechId":"","apprId":"hsg2a5u","amount":5000,"date":"2026-09-03","note":"Semaine"},{"id":"5wpiedk","mechId":"hu66go9","apprId":"","amount":47000,"date":"2026-09-10","note":"Fin de semaine"},{"id":"scke96d","mechId":"","apprId":"hsg2a5u","amount":5000,"date":"2026-09-10","note":"Semaine"},{"id":"ony2ug0","mechId":"","apprId":"hsg2a5u","amount":6000,"date":"2026-09-17","note":"Semaine"},{"id":"vpetlo5","mechId":"hu66go9","apprId":"","amount":23500,"date":"2026-09-17","note":"Acompte"},{"id":"sjr3tq6","mechId":"hu66go9","apprId":"","amount":41000,"date":"2026-09-24","note":"Acompte"},{"id":"vr6cyxx","mechId":"","apprId":"hsg2a5u","amount":6000,"date":"2026-09-24","note":"Semaine"},{"id":"1e70nqb","mechId":"","apprId":"hsg2a5u","amount":4000,"date":"2026-10-01","note":"Semaine"},{"id":"w1iul8r","mechId":"hu66go9","apprId":"","amount":49000,"date":"2026-10-01","note":"Fin de semaine"},{"id":"sk0y8ht","mechId":"","apprId":"hsg2a5u","amount":6000,"date":"2026-10-08","note":"Semaine"},{"id":"zfnx5xb","mechId":"hu66go9","apprId":"","amount":41500,"date":"2026-10-08","note":"Fin de semaine"},{"id":"pe3frob","mechId":"hu66go9","apprId":"","amount":40500,"date":"2026-10-15","note":"Fin de semaine"},{"id":"r322ym9","mechId":"","apprId":"hsg2a5u","amount":7200,"date":"2026-10-15","note":"Semaine"},{"id":"1eoqc1u","mechId":"","apprId":"hsg2a5u","amount":7200,"date":"2026-10-22","note":"Semaine"},{"id":"ze8atre","mechId":"hu66go9","apprId":"","amount":11500,"date":"2026-10-22","note":"Acompte"},{"id":"ogrmxrz","mechId":"hu66go9","apprId":"","amount":30000,"date":"2026-10-29","note":"Acompte"}],"apprentices":[{"id":"hsg2a5u","name":"Sofiane","daily":1200,"mechId":"0952paf"}],"days":[{"id":"8d9wor4","apprId":"hsg2a5u","date":"2026-08-03","rate":1000,"mechId":"","mechPart":0},{"id":"tjr3zgn","apprId":"hsg2a5u","date":"2026-08-04","rate":1000,"mechId":"hu66go9","mechPart":500.0},{"id":"0e4usti","apprId":"hsg2a5u","date":"2026-08-05","rate":1000,"mechId":"hu66go9","mechPart":500.0},{"id":"es1fmm8","apprId":"hsg2a5u","date":"2026-08-08","rate":1000,"mechId":"hu66go9","mechPart":500.0},{"id":"mbugq57","apprId":"hsg2a5u","date":"2026-08-09","rate":1000,"mechId":"","mechPart":0},{"id":"8ocw551","apprId":"hsg2a5u","date":"2026-08-10","rate":1000,"mechId":"hu66go9","mechPart":500.0},{"id":"xm8q97w","apprId":"hsg2a5u","date":"2026-08-11","rate":1000,"mechId":"hu66go9","mechPart":500.0},{"id":"fb13dc4","apprId":"hsg2a5u","date":"2026-08-12","rate":1000,"mechId":"hu66go9","mechPart":500.0},{"id":"zhwhqhp","apprId":"hsg2a5u","date":"2026-08-13","rate":1000,"mechId":"hu66go9","mechPart":500.0},{"id":"rn3ahc7","apprId":"hsg2a5u","date":"2026-08-15","rate":1000,"mechId":"hu66go9","mechPart":500.0},{"id":"imtlt1s","apprId":"hsg2a5u","date":"2026-08-16","rate":1000,"mechId":"hu66go9","mechPart":500.0},{"id":"1mfzyxn","apprId":"hsg2a5u","date":"2026-08-17","rate":1000,"mechId":"hu66go9","mechPart":500.0},{"id":"5qupv9f","apprId":"hsg2a5u","date":"2026-08-18","rate":1000,"mechId":"hu66go9","mechPart":500.0},{"id":"lf3loot","apprId":"hsg2a5u","date":"2026-08-19","rate":1000,"mechId":"hu66go9","mechPart":500.0},{"id":"3crsfcr","apprId":"hsg2a5u","date":"2026-08-20","rate":1000,"mechId":"hu66go9","mechPart":500.0},{"id":"vey761u","apprId":"hsg2a5u","date":"2026-08-22","rate":1000,"mechId":"hu66go9","mechPart":500.0},{"id":"rhd7ipu","apprId":"hsg2a5u","date":"2026-08-23","rate":1000,"mechId":"hu66go9","mechPart":500.0},{"id":"oqraskr","apprId":"hsg2a5u","date":"2026-08-24","rate":1000,"mechId":"hu66go9","mechPart":500.0},{"id":"7e9irrz","apprId":"hsg2a5u","date":"2026-08-25","rate":1000,"mechId":"hu66go9","mechPart":500.0},{"id":"fxz9a9a","apprId":"hsg2a5u","date":"2026-08-26","rate":1000,"mechId":"hu66go9","mechPart":500.0},{"id":"cuibb5d","apprId":"hsg2a5u","date":"2026-08-27","rate":1000,"mechId":"hu66go9","mechPart":500.0},{"id":"g2dmj5m","apprId":"hsg2a5u","date":"2026-08-29","rate":1000,"mechId":"hu66go9","mechPart":500.0},{"id":"mct7642","apprId":"hsg2a5u","date":"2026-08-31","rate":1000,"mechId":"hu66go9","mechPart":500.0},{"id":"g0zegtz","apprId":"hsg2a5u","date":"2026-09-01","rate":1000,"mechId":"hu66go9","mechPart":500.0},{"id":"albp6pc","apprId":"hsg2a5u","date":"2026-09-02","rate":1000,"mechId":"hu66go9","mechPart":500.0},{"id":"naatkym","apprId":"hsg2a5u","date":"2026-09-03","rate":1000,"mechId":"hu66go9","mechPart":500.0},{"id":"15gvwlp","apprId":"hsg2a5u","date":"2026-09-05","rate":1000,"mechId":"","mechPart":0},{"id":"02c6fj2","apprId":"hsg2a5u","date":"2026-09-07","rate":1000,"mechId":"","mechPart":0},{"id":"5lkn6em","apprId":"hsg2a5u","date":"2026-09-08","rate":1000,"mechId":"hu66go9","mechPart":500.0},{"id":"i5g60hx","apprId":"hsg2a5u","date":"2026-09-09","rate":1000,"mechId":"hu66go9","mechPart":500.0},{"id":"gs5bz4v","apprId":"hsg2a5u","date":"2026-09-10","rate":1000,"mechId":"hu66go9","mechPart":500.0},{"id":"ud1zovg","apprId":"hsg2a5u","date":"2026-09-12","rate":1000,"mechId":"hu66go9","mechPart":500.0},{"id":"7ju3mq9","apprId":"hsg2a5u","date":"2026-09-13","rate":1000,"mechId":"hu66go9","mechPart":500.0},{"id":"h3kyqo0","apprId":"hsg2a5u","date":"2026-09-14","rate":1000,"mechId":"hu66go9","mechPart":500.0},{"id":"kbla7it","apprId":"hsg2a5u","date":"2026-09-15","rate":1000,"mechId":"hu66go9","mechPart":500.0},{"id":"sizk7o3","apprId":"hsg2a5u","date":"2026-09-16","rate":1000,"mechId":"hu66go9","mechPart":500.0},{"id":"xcydh87","apprId":"hsg2a5u","date":"2026-09-17","rate":1000,"mechId":"hu66go9","mechPart":500.0},{"id":"athuh38","apprId":"hsg2a5u","date":"2026-09-19","rate":1000,"mechId":"hu66go9","mechPart":500.0},{"id":"ojvlyx1","apprId":"hsg2a5u","date":"2026-09-20","rate":1000,"mechId":"hu66go9","mechPart":500.0},{"id":"47i3zc6","apprId":"hsg2a5u","date":"2026-09-21","rate":1000,"mechId":"hu66go9","mechPart":500.0},{"id":"zglgm7w","apprId":"hsg2a5u","date":"2026-09-22","rate":1000,"mechId":"hu66go9","mechPart":500.0},{"id":"bkin8zz","apprId":"hsg2a5u","date":"2026-09-23","rate":1000,"mechId":"hu66go9","mechPart":500.0},{"id":"qoi5szu","apprId":"hsg2a5u","date":"2026-09-24","rate":1000,"mechId":"hu66go9","mechPart":500.0},{"id":"mxhdd1m","apprId":"hsg2a5u","date":"2026-09-26","rate":1000,"mechId":"hu66go9","mechPart":500.0},{"id":"e4ehkro","apprId":"hsg2a5u","date":"2026-09-27","rate":1000,"mechId":"hu66go9","mechPart":500.0},{"id":"0v9xc90","apprId":"hsg2a5u","date":"2026-09-28","rate":1000,"mechId":"hu66go9","mechPart":500.0},{"id":"qngyecm","apprId":"hsg2a5u","date":"2026-09-30","rate":1000,"mechId":"hu66go9","mechPart":500.0},{"id":"kgwkaxh","apprId":"hsg2a5u","date":"2026-10-04","rate":1200,"mechId":"hu66go9","mechPart":600.0},{"id":"iqh6nsh","apprId":"hsg2a5u","date":"2026-10-05","rate":1200,"mechId":"hu66go9","mechPart":600.0},{"id":"in6zeox","apprId":"hsg2a5u","date":"2026-10-06","rate":1200,"mechId":"hu66go9","mechPart":600.0},{"id":"illn7yn","apprId":"hsg2a5u","date":"2026-10-07","rate":1200,"mechId":"hu66go9","mechPart":600.0},{"id":"835zcsa","apprId":"hsg2a5u","date":"2026-10-08","rate":1200,"mechId":"hu66go9","mechPart":600.0},{"id":"sy7usjq","apprId":"hsg2a5u","date":"2026-10-10","rate":1200,"mechId":"hu66go9","mechPart":600.0},{"id":"rek5tq2","apprId":"hsg2a5u","date":"2026-10-11","rate":1200,"mechId":"hu66go9","mechPart":600.0},{"id":"3foozdx","apprId":"hsg2a5u","date":"2026-10-12","rate":1200,"mechId":"hu66go9","mechPart":600.0},{"id":"zx3a0dv","apprId":"hsg2a5u","date":"2026-10-13","rate":1200,"mechId":"hu66go9","mechPart":600.0},{"id":"on63ky8","apprId":"hsg2a5u","date":"2026-10-14","rate":1200,"mechId":"hu66go9","mechPart":600.0},{"id":"azsqszt","apprId":"hsg2a5u","date":"2026-10-15","rate":1200,"mechId":"hu66go9","mechPart":600.0},{"id":"p3lbu08","apprId":"hsg2a5u","date":"2026-10-17","rate":1200,"mechId":"hu66go9","mechPart":600.0},{"id":"i0ya4vy","apprId":"hsg2a5u","date":"2026-10-18","rate":1200,"mechId":"hu66go9","mechPart":600.0},{"id":"wf0t8d5","apprId":"hsg2a5u","date":"2026-10-19","rate":1200,"mechId":"","mechPart":0},{"id":"p1klc82","apprId":"hsg2a5u","date":"2026-10-20","rate":1200,"mechId":"hu66go9","mechPart":600.0},{"id":"5fhab75","apprId":"hsg2a5u","date":"2026-10-21","rate":1200,"mechId":"hu66go9","mechPart":600.0},{"id":"l6ika5b","apprId":"hsg2a5u","date":"2026-10-22","rate":1200,"mechId":"0952paf","mechPart":600.0},{"id":"j7qtl57","apprId":"hsg2a5u","date":"2026-10-25","rate":1200,"mechId":"0952paf","mechPart":600.0},{"id":"jrrne32","apprId":"hsg2a5u","date":"2026-10-26","rate":1200,"mechId":"0952paf","mechPart":600.0},{"id":"yrnknh1","apprId":"hsg2a5u","date":"2026-10-27","rate":1200,"mechId":"","mechPart":0},{"id":"2kfsfxn","apprId":"hsg2a5u","date":"2026-10-28","rate":1200,"mechId":"","mechPart":0},{"id":"st2z2iw","apprId":"hsg2a5u","date":"2026-10-29","rate":1200,"mechId":"0952paf","mechPart":600.0},{"id":"cnnkei1","apprId":"hsg2a5u","date":"2026-10-31","rate":1200,"mechId":"0952paf","mechPart":600.0},{"id":"kk3fo7m","apprId":"hsg2a5u","date":"2026-11-01","rate":1200,"mechId":"0952paf","mechPart":600.0},{"id":"r5fxbix","apprId":"hsg2a5u","date":"2026-11-03","rate":1200,"mechId":"0952paf","mechPart":600.0}]};
+/* ============ INITIALISATION (variables avant tout) ============ */
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){alert("Sauvegarde impossible. Utilisez « Exporter les données ».")}};
+let S={mechanics:[],orders:[],payouts:[],apprentices:[],days:[]};
+let tab="orders",editId=null,filter="Tous",periodOr="all",filterOr="Tous",dateFromOr="",dateToOr="";
+let pendingPartialId=null, pendingPartialOld=null;
+/* ============ UTILITAIRES ============ */
+const uid=()=>Math.random().toString(36).slice(2,9);
+const $=s=>document.querySelector(s);
+const esc=s=>String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const fmt=n=>Math.round(n||0).toLocaleString("fr-FR")+" DA";
+const today=()=>{const d=new Date();return new Date(d-d.getTimezoneOffset()*6e4).toISOString().slice(0,10)};
+const mech=id=>S.mechanics.find(m=>m.id===id);
+const appr=id=>S.apprentices.find(a=>a.id===id);
+const mpart=id=>S.days.filter(d=>d.mechId===id).reduce((a,d)=>a+(d.mechPart||0),0);
+const nDays=id=>S.days.filter(d=>d.apprId===id).length;
+const wage=id=>S.days.filter(d=>d.apprId===id).reduce((a,d)=>a+d.rate,0);
+const paidTo=(k,id)=>S.payouts.filter(p=>p[k]===id).reduce((a,p)=>a+p.amount,0);
+const comm=o=>o.status==="Payé"?(o.price||0)*(o.rate||0)/100:(o.status==="Partiellement payé"?(o.amountPaid||0)*(o.rate||0)/100:0);
+const due=(k,id)=>k==="mechId"?S.orders.filter(o=>o.mechId===id&&(o.status==="Payé"||o.status==="Partiellement payé")).reduce((a,o)=>a+comm(o),0)-mpart(id)-paidTo("mechId",id):wage(id)-paidTo("apprId",id);
+/* ============ RENDER ============ */
+function render(){
+ document.querySelectorAll("nav [data-tab]").forEach(b=>b.classList.toggle("on",b.dataset.tab===tab));
+ $("#main").innerHTML=tab==="orders"?vOrders():tab==="historique"?vHistorique():tab==="mech"?vMech():vCash();
+}
+/* ============ CHARGEMENT DES DONNÉES ============ */
+let storedVer=localStorage.getItem(KEY+"_ver");
+try{const r=localStorage.getItem(KEY);if(r)S=Object.assign(S,JSON.parse(r))}catch(e){}
+if(!localStorage.getItem(KEY)||storedVer!==DATA_VERSION){S=Object.assign({mechanics:[],orders:[],payouts:[],apprentices:[],days:[]},SEED_DATA);save();render();localStorage.setItem(KEY+"_ver",DATA_VERSION);}
+S.orders.forEach(o=>{if(o.amountPaid===undefined)o.amountPaid=0;if(o.rate===undefined)o.rate=0;});
+if(localStorage.getItem(KEY)&&storedVer===DATA_VERSION)render();
+/* ============ VUE ORDRES ============ */
+function vOrders(){
+ const e=S.orders.find(o=>o.id===editId)||{date:today(),plate:"",vehicle:"",client:"",type:"",price:0,mechId:"",status:"En cours",amountPaid:0};
+ return `<h1>Ordres de réparation</h1>
+ <section class="card"><h2>${editId?"Modifier l’ordre":"Nouveau véhicule entrant"}</h2>
+ <div class="grid">
+  <label>Date<input id="f-date" type="date" value="${e.date}"></label>
+  <label>Véhicule<input id="f-vehicle" placeholder="Golf 7 1.6 TDI" value="${esc(e.vehicle)}"></label>
+  <label>Immatriculation<input id="f-plate" value="${esc(e.plate)}"></label>
+  <label>Client<input id="f-client" value="${esc(e.client)}"></label>
+  <label class="w2">Intervention<input id="f-type" placeholder="Vidange + filtres, plaquettes AV…" value="${esc(e.type)}"></label>
+  <label>Mécanicien<select id="f-mech"><option value="">Sans mécanicien (moi)</option>${S.mechanics.map(m=>`<option value="${m.id}" ${m.id===e.mechId?"selected":""}>${esc(m.name)} (${m.rate} %)</option>`).join("")}</select></label>
+ </div>
+ <div class="row"><button class="pri" data-act="saveOrder">Enregistrer l’ordre</button>${editId?`<button data-act="cancelEdit">Annuler</button>`:""}</div></section>
+ <div class="empty" style="margin-top:10px">Le prix et le paiement se définissent dans l’onglet Historique via le bouton « Payer » sur la commande.</div>`;
+}
+/* ============ VUE ÉQUIPE ============ */
+function vMech(){
+ const rows=S.mechanics.map(m=>`<tr><td>${esc(m.name)}</td><td class="n">${m.rate} %</td>
+ <td class="n"><button class="lnk" data-act="rate" data-id="${m.id}">Changer le taux</button><button class="lnk" data-act="delMech" data-id="${m.id}">Supprimer</button></td></tr>`).join("");
+ const arows=S.apprentices.map(a=>`<tr><td>${esc(a.name)}</td><td class="n">${fmt(a.daily)} / jour</td><td class="n">${nDays(a.id)}</td><td><select data-appmech="${a.id}"><option value="">Aucun (l’atelier paie tout)</option>${S.mechanics.map(m=>`<option value="${m.id}" ${m.id===a.mechId?"selected":""}>${esc(m.name)}</option>`).join("")}</select></td>
+ <td class="n"><button class="lnk" data-act="presentToday" data-id="${a.id}">Présent aujourd’hui</button><button class="lnk" data-act="daily" data-id="${a.id}">Changer le tarif</button><button class="lnk" data-act="delAppr" data-id="${a.id}">Supprimer</button></td></tr>`).join("");
+ const drows=S.days.slice().sort((a,b)=>b.date.localeCompare(a.date)).slice(0,20).map(d=>`<tr><td>${esc(d.date)}</td><td>${esc((appr(d.apprId)||{name:"–"}).name)}</td><td>${esc((mech(d.mechId)||{name:"–"}).name)}</td><td class="n">${fmt(d.rate)}</td><td class="n">${fmt(d.mechPart||0)}</td><td class="n"><button class="lnk" data-act="delDay" data-id="${d.id}">Supprimer</button></td></tr>`).join("");
+ return `<h1>Équipe</h1>
+ <h2>Mécaniciens (payés au pourcentage)</h2>
+ <section class="card"><div class="row"><label>Nom<input id="m-name"></label><label>Pourcentage sur l’ordre (%)<input id="m-rate" type="number" min="0" max="100" step="0.5" value="30"></label>
+ <button class="pri" data-act="addMech" style="align-self:flex-end">Ajouter le mécanicien</button></div></section>
+ ${S.mechanics.length?`<table><thead><tr><th>Nom</th><th class="n">Taux</th><th></th></tr></thead><tbody>${rows}</tbody></table><p class="mu">Le taux est figé sur chaque ordre à sa création : le changer ne modifie pas les ordres passés.</p>`:`<div class="empty">Aucun mécanicien. Ajoute le premier pour calculer son pourcentage.</div>`}
+ <h2 style="margin-top:36px">Apprentis (payés à la journée)</h2>
+ <section class="card"><div class="row"><label>Nom<input id="a-name"></label><label>Tarif par jour (DA)<input id="a-daily" type="number" min="0" value="1000"></label>
+ <button class="pri" data-act="addAppr" style="align-self:flex-end">Ajouter l’apprenti</button></div></section>
+ ${S.apprentices.length?`<table><thead><tr><th>Nom</th><th class="n">Tarif</th><th class="n">Jours pointés</th><th>Travaille avec</th><th></th></tr></thead><tbody>${arows}</tbody></table>
+ <p class="mu">Le tarif est figé sur chaque journée pointée. À chaque journée, la moitié du tarif est retirée de la commission du mécanicien associé et l’autre moitié reste à la charge de l’atelier.</p>
+ <section class="card"><h2>Pointer une autre journée</h2><div class="row"><label>Apprenti<select id="d-appr">${S.apprentices.map(a=>`<option value="${a.id}">${esc(a.name)}</option>`).join("")}</select></label>
+ <label>Date<input id="d-date" type="date" value="${today()}"></label><label>Avec le mécanicien<select id="d-mech"><option value="default">Celui de l’apprenti</option>${S.mechanics.map(m=>`<option value="${m.id}">${esc(m.name)}</option>`).join("")}<option value="">Aucun (l’atelier paie tout)</option></select></label><button class="pri" data-act="addDay" style="align-self:flex-end">Ajouter la journée</button></div></section>
+ ${drows?`<h2>Dernières journées pointées</h2><table><thead><tr><th>Date</th><th>Apprenti</th><th>Mécanicien</th><th class="n">Tarif</th><th class="n">Part du mécanicien</th><th></th></tr></thead><tbody>${drows}</tbody></table>`:""}`:`<div class="empty">Aucun apprenti. Ajoute le premier, puis pointe ses journées.</div>`}`;
+}
+/* ============ VUE TRÉSORERIE ============ */
+function vCash(){
+ const todayS=today();
+ const inRange=d=>{
+  if(periodOr==="today")return d===todayS;
+  if(periodOr==="yesterday"){const dd=new Date();dd.setDate(dd.getDate()-1);return d===new Date(dd-dd.getTimezoneOffset()*6e4).toISOString().slice(0,10);}
+  if(periodOr==="month")return d.startsWith(todayS.slice(0,7));
+  if(dateFromOr&&d<dateFromOr)return false;
+  if(dateToOr&&d>dateToOr)return false;
+  return true;
+ };
+ const paid=S.orders.filter(o=>o.status==="Payé"&&inRange(o.date));
+ const enc=paid.reduce((a,o)=>a+(o.price||0),0)+S.orders.filter(o=>o.status==="Partiellement payé"&&inRange(o.date)).reduce((a,o)=>a+(o.amountPaid||0),0);
+ const cm=paid.reduce((a,o)=>a+comm(o),0)+S.orders.filter(o=>o.status==="Partiellement payé"&&inRange(o.date)).reduce((a,o)=>a+comm(o),0);
+ const pend=S.orders.filter(o=>o.status!=="Payé"&&inRange(o.date)).reduce((a,o)=>a+(o.price-(o.amountPaid||0)),0);
+ const sal=S.days.filter(d=>inRange(d.date)).reduce((a,d)=>a+d.rate,0);
+ const mp=S.days.filter(d=>inRange(d.date)).reduce((a,d)=>a+(d.mechPart||0),0);
+ const btn=(k,id,rest)=>rest>0?`<button class="lnk" data-act="payDue" data-k="${k}" data-id="${id}">Payer le dû</button>`:"";
+ const mrows=S.mechanics.map(m=>{
+  const ac=S.orders.filter(o=>o.mechId===m.id&&(o.status==="Payé"||o.status==="Partiellement payé")).reduce((a,o)=>a+comm(o),0);
+  const pa=mpart(m.id),vs=paidTo("mechId",m.id),rest=ac-pa-vs;
+  return `<tr><td>${esc(m.name)}</td><td class="n">${fmt(ac)}</td><td class="n">${pa?"− "+fmt(pa):fmt(0)}</td><td class="n">${fmt(vs)}</td><td class="n ${rest>0?"wa":"ok"}"><b>${fmt(rest)}</b></td><td class="n">${btn("mechId",m.id,rest)}</td></tr>`}).join("");
+ const arows=S.apprentices.map(a=>{
+  const ac=wage(a.id),vs=paidTo("apprId",a.id),rest=ac-vs;
+  return `<tr><td>${esc(a.name)}</td><td class="n">${nDays(a.id)}</td><td class="n">${fmt(ac)}</td><td class="n">${fmt(vs)}</td><td class="n ${rest>0?"wa":"ok"}"><b>${fmt(rest)}</b></td><td class="n">${btn("apprId",a.id,rest)}</td></tr>`}).join("");
+ const pays=S.payouts.filter(p=>inRange(p.date)).sort((a,b)=>b.date.localeCompare(a.date)).map(p=>`<tr><td>${esc(p.date)}</td><td>${esc((mech(p.mechId)||appr(p.apprId)||{name:"–"}).name)}</td><td>${esc(p.note)}</td><td class="n">${fmt(p.amount)}</td><td class="n"><button class="lnk" data-act="delPay" data-id="${p.id}">Supprimer</button></td></tr>`).join("");
+ const opts=S.mechanics.map(m=>`<option value="mechId:${m.id}">${esc(m.name)}</option>`).join("")+S.apprentices.map(a=>`<option value="apprId:${a.id}">${esc(a.name)} (apprenti)</option>`).join("");
+ return `<h1>Trésorerie</h1>
+ <div class="row" style="margin-bottom:16px"><div class="chips" style="margin-bottom:8px">
+  <button class="${periodOr==="today"?"on":""}" data-act="orf-today">Aujourd’hui</button>
+  <button class="${periodOr==="yesterday"?"on":""}" data-act="orf-yesterday">Hier</button>
+  <button class="${periodOr==="month"?"on":""}" data-act="orf-month">Mois courant</button>
+  <button class="${periodOr==="all"?"on":""}" data-act="orf-all">Période totale</button>
+ </div><div class="row" style="gap:10px;align-items:flex-end">
+  <label>Du<input id="dfCash" type="date" value="${dateFromOr}"></label>
+  <label>Au<input id="dtCash" type="date" value="${dateToOr}"></label>
+  <button data-act="clearRangeCash" style="align-self:flex-end;padding:8px 14px">Effacer dates</button>
+  <button data-act="allPeriod" style="align-self:flex-end">Tout afficher</button>
+ </div></div>
+ <div class="kpis"><div class="kpi"><span>Encaissé (ordres payés)</span><b>${fmt(enc)}</b></div>
+ <div class="kpi"><span>Commissions mécaniciens (après part apprentis)</span><b>${fmt(cm-mp)}</b></div>
+ <div class="kpi"><span>Salaires apprentis</span><b>${fmt(sal)}</b><small class="mu">dont ${fmt(mp)} payés par les mécaniciens</small></div>
+ <div class="kpi big"><span>Reste pour l’atelier</span><b>${fmt(enc-cm+mp-sal)}</b></div>
+ <div class="kpi"><span>À encaisser (en cours / terminés)</span><b>${fmt(pend)}</b></div></div>
+ <h2>Ce que tu dois à chaque mécanicien (depuis le début)</h2>
+ ${S.mechanics.length?`<table><thead><tr><th>Mécanicien</th><th class="n">Commission acquise</th><th class="n">Part apprentis</th><th class="n">Déjà versé</th><th class="n">Reste à payer</th><th></th></tr></thead><tbody>${mrows}</tbody></table><p class="mu">Reste à payer = commission acquise − part apprentis − déjà versé. Un reste négatif veut dire que la part apprentis dépasse sa commission : il te doit la différence.</p>`:`<div class="empty">Ajoute un mécanicien pour suivre ses commissions.</div>`}
+ <h2 style="margin-top:26px">Ce que tu dois à chaque apprenti (depuis le début)</h2>
+ ${S.apprentices.length?`<table><thead><tr><th>Apprenti</th><th class="n">Jours pointés</th><th class="n">Salaire acquis</th><th class="n">Déjà versé</th><th class="n">Reste à payer</th><th></th></tr></thead><tbody>${arows}</tbody></table>`:`<div class="empty">Ajoute un apprenti dans l’onglet Équipe pour suivre ses journées.</div>`}
+ <section class="card" style="margin-top:22px"><h2>Enregistrer un versement</h2>
+ <div class="row"><label>Personne<select id="p-who">${opts}</select></label>
+ <label>Montant (DA)<input id="p-amt" type="number" min="0"></label><label>Date<input id="p-date" type="date" value="${today()}"></label>
+ <label>Note<input id="p-note" placeholder="Acompte, fin de semaine…"></label>
+ <button class="pri" data-act="addPay" style="align-self:flex-end">Enregistrer</button></div></section>
+ ${pays?`<table><thead><tr><th>Date</th><th>Personne</th><th>Note</th><th class="n">Montant</th><th></th></tr></thead><tbody>${pays}</tbody></table>`:""}`;
+}
+/* ============ ÉVÉNEMENTS CLIC ============ */
+const val=id=>$(id).value.trim();
+document.addEventListener("click",ev=>{
+ const t=ev.target.closest("[data-tab],[data-act]");if(!t)return;
+ if(t.dataset.tab){tab=t.dataset.tab;return render()}
+ const a=t.dataset.act,id=t.dataset.id;
+ if(a==="saveOrder"){
+  const vehicle=val("#f-vehicle"),plate=val("#f-plate");
+  if(!vehicle&&!plate)return alert("Indique au moins le véhicule ou l’immatriculation.");
+  const mechId=$("#f-mech").value,old=S.orders.find(o=>o.id===editId);
+  const rate=mechId?(old&&old.mechId===mechId?old.rate:mech(mechId).rate):0;
+  const o={id:editId||uid(),date:$("#f-date").value||today(),vehicle,plate,client:val("#f-client"),type:val("#f-type"),price:editId?(old.price||0):0,mechId,rate:editId?(old.rate||0):0,status:editId?(old.status||"En cours"):"En cours",amountPaid:old?old.amountPaid:0};
+  if(old)Object.assign(old,o);else S.orders.push(o);
+  editId=null;save();render();
+ }else if(a==="cancelEdit"){editId=null;render()}
+ else if(a==="edit"){tab="orders";editId=id;render();scrollTo(0,0)}
+ else if(a==="del"){if(confirm("Supprimer cet ordre ?")){S.orders=S.orders.filter(o=>o.id!==id);save();render()}}
+ else if(a==="addMech"){
+  const name=val("#m-name"),rate=parseFloat($("#m-rate").value);
+  if(!name||isNaN(rate))return alert("Indique le nom et le pourcentage.");
+  S.mechanics.push({id:uid(),name,rate});save();render();
+ }else if(a==="rate"){
+  const m=mech(id),r=parseFloat(prompt("Nouveau taux (%) pour "+m.name+" :",m.rate));
+  if(!isNaN(r)){m.rate=r;save();render()}
+ }else if(a==="delMech"){
+  if(S.orders.some(o=>o.mechId===id)||S.days.some(d=>d.mechId===id)||S.apprentices.some(x=>x.mechId===id))return alert("Ce mécanicien est lié à des ordres, des journées ou des apprentis : impossible de le supprimer.");
+  if(confirm("Supprimer ce mécanicien ?")){S.mechanics=S.mechanics.filter(m=>m.id!==id);save();render()}
+ }else if(a==="addPay"){
+  const amount=parseFloat($("#p-amt").value),w=($("#p-who").value||"").split(":");
+  if(w.length<2||isNaN(amount)||amount<=0)return alert("Choisis une personne et un montant.");
+  S.payouts.push({id:uid(),mechId:"",apprId:"",[w[0]]:w[1],amount,date:$("#p-date").value||today(),note:val("#p-note")});save();render();
+ }else if(a==="payDue"){
+  const k=t.dataset.k,rest=due(k,id),x=k==="mechId"?mech(id):appr(id);
+  if(rest>0&&confirm("Payer "+fmt(rest)+" à "+x.name+" ?")){S.payouts.push({id:uid(),mechId:"",apprId:"",[k]:id,amount:rest,date:today(),note:"Solde"});save();render()}
+ }else if(a==="addAppr"){
+  const name=val("#a-name"),daily=parseFloat($("#a-daily").value);
+  if(!name||isNaN(daily)||daily<0)return alert("Indique le nom et le tarif par jour.");
+  S.apprentices.push({id:uid(),name,daily,mechId:S.mechanics.length===1?S.mechanics[0].id:""});save();render();
+ }else if(a==="daily"){
+  const x=appr(id),r=parseFloat(prompt("Nouveau tarif par jour (DA) pour "+x.name+" :",x.daily));
+  if(!isNaN(r)&&r>=0){x.daily=r;save();render()}
+ }else if(a==="delAppr"){
+  if(S.days.some(d=>d.apprId===id)||S.payouts.some(p=>p.apprId===id))return alert("Cet apprenti a des journées ou des versements enregistrés : impossible de le supprimer.");
+  if(confirm("Supprimer cet apprenti ?")){S.apprentices=S.apprentices.filter(x=>x.id!==id);save();render()}
+ }else if(a==="presentToday"||a==="addDay"){
+  const aid=a==="addDay"?$("#d-appr").value:id,date=a==="addDay"?($("#d-date").value||today()):today(),x=appr(aid);
+  if(!x)return;
+  if(S.days.some(d=>d.apprId===aid&&d.date===date))return alert(x.name+" est déjà pointé le "+date+".");
+  const ms=a==="addDay"?$("#d-mech").value:"default",mid=ms==="default"?(x.mechId||""):ms,m2=mech(mid)?mid:"";
+  S.days.push({id:uid(),apprId:aid,date,rate:x.daily,mechId:m2,mechPart:m2?x.daily*SPLIT:0});save();render();
+ }else if(a==="delDay"){if(confirm("Supprimer cette journée ?")){S.days=S.days.filter(d=>d.id!==id);save();render()}
+ }else if(a==="delPay"){if(confirm("Supprimer ce versement ?")){S.payouts=S.payouts.filter(p=>p.id!==id);save();render()}}
+ else if(a==="allPeriod"){periodOr="all";dateFromOr="";dateToOr="";render()}
+ else if(a==="orfilt"){filterOr=t.dataset.v;render()}
+ else if(a&&a.startsWith("orf-")){periodOr=a.slice(4);dateFromOr="";dateToOr="";render()}
+ else if(a==="clearRangeOr"||a==="clearRangeCash"){dateFromOr="";dateToOr="";periodOr="all";render()}
+ else if(a==="pm-confirm"){confirmPartial();}
+ else if(a==="pm-cancel"){cancelPartial();}
+ else if(a==="payOrder"){openPartialModal(S.orders.find(x=>x.id===id));}
+ else if(a==="export"){
+  const b=new Blob([JSON.stringify(S,null,1)],{type:"application/json"}),l=document.createElement("a");
+  l.href=URL.createObjectURL(b);l.download="carlab-sauvegarde-"+today()+".json";l.click();
+ }else if(a==="clearDb"){
+  if(confirm("Vider entièrement la base de données ? Cette action est irréversible.")){
+   S={mechanics:[],orders:[],payouts:[],apprentices:[],days:[]};
+   save();render();
+  }
+ }else if(a==="import"){$("#imp").click()}
+});
+document.addEventListener("change",ev=>{
+ const t=ev.target;
+ if(t.dataset.status){
+  const o=S.orders.find(x=>x.id===t.dataset.status);
+  const oldStatus=o.status;
+  o.status=t.value;
+  if(t.value==="Partiellement payé" || t.value==="Payé"){
+   pendingPartialId=o.id;pendingPartialOld=oldStatus;
+   openPartialModal(o);
+  }
+  save();render();
+ }
+ else if(t.dataset.appmech){appr(t.dataset.appmech).mechId=t.value;save();render()}
+ else if(t.id==="period"||t.id==="dfCash"||t.id==="dtCash"){periodOr="all";render()}
+ else if(t.id==="dfOr"){dateFromOr=t.value;periodOr="all";render()}
+ else if(t.id==="dtOr"){dateToOr=t.value;periodOr="all";render()}
+ else if(t.id==="f-or-vehicle"||t.id==="f-or-client"){render()}
+ else if(t.id==="pm-amount"||t.id==="pm-total-price"){updateRestePreview();}
+ else if(t.id==="imp"&&t.files[0]){
+  const r=new FileReader();r.onload=()=>{try{const d=JSON.parse(r.result);
+   if(!d.orders||!d.mechanics)throw 0;if(confirm("Remplacer les données actuelles par cette sauvegarde ?")){S=Object.assign({mechanics:[],orders:[],payouts:[],apprentices:[],days:[]},d);save();render()}
+  }catch(e){alert("Fichier de sauvegarde invalide.")}};r.readAsText(t.files[0]);t.value="";
+  }
+ });
+/* ============ MODAL PAIEMENT ============ */
+function openPartialModal(o){
+ pendingPartialId=o.id;pendingPartialOld=o.status;
+ const isNewPrice=(o.price||0)===0;
+ document.getElementById("pm-total-price-row").style.display=isNewPrice?"block":"none";
+ const remain=o.price-(o.amountPaid||0);
+ $("#pm-vehicle").textContent=esc(o.vehicle)+" ("+esc(o.plate)+")";
+ $("#pm-price").textContent=isNewPrice?"À définir":fmt(o.price);
+ $("#pm-already").textContent=fmt(o.amountPaid||0);
+ $("#pm-amount").value=remain>0?remain:0;
+ $("#pm-total-price").value="";
+ $("#pm-date").value=today();
+ $("#pm-note").value="";
+ document.getElementById("pm-reste").textContent="Reste après ce paiement : "+fmt(remain>0?remain:0)+" DA";
+ document.getElementById("pm-overlay").classList.add("open");
+}
+function closePartialModal(){
+ document.getElementById("pm-overlay").classList.remove("open");
+ pendingPartialId=null;pendingPartialOld=null;
+}
+function updateRestePreview(){
+ const amt=parseFloat($("#pm-amount").value)||0;
+ const o=S.orders.find(x=>x.id===pendingPartialId);
+ if(!o)return;
+ const totalPrice=(o.price||0)===0?(parseFloat($("#pm-total-price").value)||0):(o.price||0);
+ const already=(o.amountPaid||0);
+ const remain=totalPrice-(already+amt);
+ document.getElementById("pm-reste").textContent="Reste après ce paiement : "+fmt(remain>0?remain:0)+" DA";
+}
+function confirmPartial(){
+ const amt=parseFloat($("#pm-amount").value)||0;
+ if(amt<=0){alert("Indique un montant supérieur à 0.");return;}
+ const o=S.orders.find(x=>x.id===pendingPartialId);
+ if(!o){closePartialModal();return;}
+ if((o.price||0)===0){
+  const totalPrice=parseFloat($("#pm-total-price").value)||0;
+  if(totalPrice<=0){alert("Indique le prix total de l'intervention.");return;}
+  o.price=totalPrice;
+ }
+ const newPaid=(o.amountPaid||0)+amt;
+ o.amountPaid=newPaid;
+ if(newPaid>=o.price){o.status="Payé"; o.amountPaid=o.price;}
+ else{o.status="Partiellement payé";}
+ closePartialModal();save();render();
+}
+function cancelPartial(){
+ const o=S.orders.find(x=>x.id===pendingPartialId);
+ if(o&&pendingPartialOld)o.status=pendingPartialOld;
+ closePartialModal();save();render();
+}
+document.getElementById("pm-overlay").addEventListener("click",e=>{
+ if(e.target.id==="pm-overlay")cancelPartial();
+});
+/* ============ VUE HISTORIQUE ============ */
+function vHistorique(){
+ const fv=$("#f-or-vehicle")?$("#f-or-vehicle").value.toLowerCase():"";
+ const fc=$("#f-or-client")?$("#f-or-client").value.toLowerCase():"";
+ const list=S.orders.filter(o=>{
+  if(fv&&!o.vehicle.toLowerCase().includes(fv))return false;
+  if(fc&&!o.client.toLowerCase().includes(fc))return false;
+  if(filterOr!=="Tous"&&o.status!==filterOr)return false;
+  if(dateFromOr&&o.date<dateFromOr)return false;
+  if(dateToOr&&o.date>dateToOr)return false;
+  if(periodOr==="today")return o.date===today();
+  if(periodOr==="yesterday"){const d=new Date();d.setDate(d.getDate()-1);return o.date===new Date(d-d.getTimezoneOffset()*6e4).toISOString().slice(0,10);}
+  if(periodOr==="month")return o.date.startsWith(today().slice(0,7));
+  return true;
+ }).sort((a,b)=>b.date.localeCompare(a.date));
+ const rows=list.map(o=>{
+  const m=mech(o.mechId);
+  const already=o.amountPaid||0;
+  const remain=o.price-already;
+  let payBadge="";
+  if(o.status==="Partiellement payé")payBadge=`<small class="wa">Payé ${fmt(already)} / Reste ${fmt(remain)}</small>`;
+  else if(o.status==="Payé")payBadge=`<small class="ok">Payé intégral</small>`;
+  else if(remain>0)payBadge=`<small class="mu">Non payé</small>`;
+  return `<tr>
+   <td>${esc(o.date)}</td>
+   <td>${esc(o.vehicle)}<small>${esc(o.plate)}</small></td>
+   <td>${esc(o.client)}</td>
+   <td>${esc(o.type)}</td>
+   <td>${m?esc(m.name)+`<small>${o.rate} %</small>`:"<span class='mu'>–</span>"}</td>
+   <td class="n">${fmt(o.price)}</td>
+   <td class="n">${fmt(comm(o))}</td>
+   <td><select data-status="${o.id}">${ST.map(s=>`<option ${s===o.status?"selected":""}>${s}</option>`).join("")}</select>${payBadge}</td>
+   <td class="n"><button class="lnk" data-act="edit" data-id="${o.id}">Modifier</button><button class="lnk" data-act="del" data-id="${o.id}">Supprimer</button>${o.status!=="Payé"?`<button class="lnk pri" data-act="payOrder" data-id="${o.id}" style="padding:2px 6px;font-size:12px">Payer</button>`:""}</td></tr>`}).join("");
+ return `<h1>Historique des ordres de réparation</h1>
+ <div class="card"><div class="row">
+  <label>Véhicule<input id="f-or-vehicle" type="text" placeholder="Filtrer par véhicule…"></label>
+  <label>Client<input id="f-or-client" type="text" placeholder="Filtrer par client…"></label>
+ </div><div class="chips" style="margin-top:10px">
+  ${["Tous",...ST].map(s=>`<button class="${filterOr===s?"on":""}" data-act="orfilt" data-v="${s}">${s}</button>`).join("")}
+ </div><div class="chips" style="margin-top:10px">
+  <button class="${periodOr==="today"?"on":""}" data-act="orf-today">Aujourd’hui</button>
+  <button class="${periodOr==="yesterday"?"on":""}" data-act="orf-yesterday">Hier</button>
+  <button class="${periodOr==="month"?"on":""}" data-act="orf-month">Mois courant</button>
+  <button class="${periodOr==="all"?"on":""}" data-act="orf-all">Période totale</button>
+ </div><div class="row" style="margin-top:10px;gap:10px;align-items:flex-end">
+  <label>Du<input id="dfOr" type="date" value="${dateFromOr}"></label>
+  <label>Au<input id="dtOr" type="date" value="${dateToOr}"></label>
+  <button data-act="clearRangeOr" style="align-self:flex-end;padding:8px 14px">Effacer dates</button>
+ </div></div>
+ ${list.length?`<table><thead><tr><th>Date</th><th>Véhicule</th><th>Client</th><th>Intervention</th><th>Mécanicien</th><th class="n">Prix</th><th class="n">Commission</th><th>Statut</th><th></th></tr></thead><tbody>${rows}</tbody></table>`:`<div class="empty">Aucun ordre trouvé avec ces filtres.</div>`}`;
+}
+</script>
+</body></html>
